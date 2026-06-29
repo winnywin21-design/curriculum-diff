@@ -26,13 +26,25 @@
   .wrap{max-width:880px;margin:0 auto;padding:28px 22px 64px}
 
   header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
-    flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line2);margin-bottom:24px}
+    flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line2);margin-bottom:20px}
   h1{font-family:var(--serif);font-weight:600;font-size:25px;letter-spacing:-.01em;margin:0 0 4px}
   .sub{font-size:13px;color:var(--muted)}
   .sub b{font-weight:500;color:var(--ink)}
-  .load{font-family:var(--ui);font-size:13px;color:var(--ink);background:var(--surface);
-    border:1px solid var(--line2);border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap}
-  .load:hover{border-color:var(--muted)}
+  .load{font-family:var(--ui);font-size:13px;color:var(--muted);background:transparent;
+    border:1px solid var(--line2);border-radius:8px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+  .load:hover{border-color:var(--muted);color:var(--ink)}
+
+  .dsbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+  .ds{font-family:var(--ui);font-size:13.5px;color:var(--muted);background:var(--surface);
+    border:1px solid var(--line);border-radius:999px;padding:7px 15px;cursor:pointer;transition:.15s;
+    display:flex;align-items:baseline;gap:7px}
+  .ds:hover{border-color:var(--line2);color:var(--ink)}
+  .ds[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .ds .dsub{font-size:11.5px;opacity:.7}
+
+  .note{font-size:12.5px;color:var(--muted);background:var(--reorg-bg);border:1px solid #e8dcc0;
+    border-radius:9px;padding:9px 13px;margin:0 0 20px;display:none}
+  .note.show{display:block}
 
   .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 30px}
   @media(max-width:560px){.metrics{grid-template-columns:repeat(2,1fr)}}
@@ -41,8 +53,7 @@
   .met .v{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1}
   .met .v.ok{color:var(--keep)} .met .v.warn{color:var(--review)}
 
-  .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;
-    margin:0 0 12px;font-weight:500}
+  .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;margin:0 0 12px;font-weight:500}
 
   .spine{display:flex;flex-direction:column;gap:9px;margin-bottom:34px}
   .row{display:grid;grid-template-columns:1fr auto 1.05fr;align-items:center;gap:14px;
@@ -97,10 +108,8 @@
   .banner.rv{background:var(--review-bg);color:var(--review)}
   .banner b{font-weight:600}
 
-  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
-    font-size:12px;color:var(--faint);line-height:1.7}
-  code{font-family:ui-monospace,monospace;background:var(--surface);border:1px solid var(--line);
-    border-radius:5px;padding:1px 6px;font-size:12px;color:var(--muted)}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);line-height:1.7}
+  code{font-family:ui-monospace,monospace;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -108,28 +117,30 @@
   <header>
     <div>
       <h1>수학과 교육과정 비교 뷰어</h1>
-      <div class="sub" id="sub"></div>
+      <div class="sub" id="sub">불러오는 중…</div>
     </div>
-    <label class="load">다른 diff.json 보기
+    <label class="load">로컬 diff.json 미리보기
       <input type="file" id="file" accept="application/json,.json" hidden>
     </label>
   </header>
 
-  <div class="metrics" id="metrics"></div>
+  <div class="dsbar" id="dsbar"></div>
+  <div class="note" id="note"></div>
 
+  <div class="metrics" id="metrics"></div>
   <p class="eyebrow" id="spinetitle"></p>
   <div class="spine" id="spine"></div>
-
   <div class="detail" id="detail"></div>
 
   <footer>
-    이 페이지는 파이프라인이 만든 <code>diff.json</code>을 읽어 보여줍니다. 기술 담당이
-    <code>diff.py</code>로 새 결과를 뽑으면, 오른쪽 위 “다른 diff.json 보기”로 올려 같이 보면 됩니다.
-    설치할 것은 없고, 인터넷이 없으면 글꼴만 기본체로 바뀝니다.
+    이 페이지는 <code>data/datasets.json</code> 목록을 읽어 위쪽 탭을 자동으로 만듭니다.
+    새 비교(예: 고등학교)를 추가하려면 <code>diff.py</code> 결과를 <code>data/</code>에 올리고
+    목록에 한 줄만 더하면 됩니다. 뷰어 코드는 고칠 필요 없습니다.
   </footer>
 </div>
 
 <script>
+// 로컬(file://)에서 열거나 목록 로딩 실패 시 쓰는 기본 데이터 (수학·중학교)
 const EMBEDDED = {
   "pair":"math.2015 ↔ math.2022","crosswalk_applied":true,
   "areas":[
@@ -151,10 +162,51 @@ const EMBEDDED = {
      "value_new":["체계적으로 사고하여 합리적으로 의사 결정하는 태도","확률 및 통계적 근거를 바탕으로 비판적으로 사고하는 태도"],"review_needed":false}
   ]
 };
+const FALLBACK_MANIFEST={title:"수학과 교육과정 비교",datasets:[{id:"embedded",label:"수학 · 중학교",sub:"2015 ↔ 2022",_embedded:true}]};
 
-let DATA, sel=0;
+let DATA, sel=0, MANIFEST, dsIdx=0;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+async function init(){
+  let manifest=null;
+  try{
+    const r=await fetch("data/datasets.json",{cache:"no-store"});
+    if(r.ok) manifest=await r.json();
+  }catch(_){}
+  if(manifest && manifest.datasets && manifest.datasets.length){
+    MANIFEST=manifest;
+    $("note").classList.remove("show");
+  }else{
+    MANIFEST=FALLBACK_MANIFEST;
+    $("note").textContent="목록을 불러오지 못했습니다(로컬에서 열었거나 온라인이 아닐 때). 기본 데이터(중학교)만 표시합니다. 온라인 주소에서 열면 모든 비교가 탭으로 자동으로 뜹니다.";
+    $("note").classList.add("show");
+  }
+  renderDatasetTabs();
+  loadDataset(0);
+}
+
+function renderDatasetTabs(){
+  $("dsbar").innerHTML=MANIFEST.datasets.map((d,i)=>
+    `<button class="ds" data-i="${i}" aria-selected="${i===dsIdx}">${esc(d.label)}${d.sub?`<span class="dsub">${esc(d.sub)}</span>`:''}</button>`).join('');
+  $("dsbar").querySelectorAll(".ds").forEach(b=>b.onclick=()=>loadDataset(+b.dataset.i));
+}
+
+async function loadDataset(i){
+  dsIdx=i;
+  $("dsbar").querySelectorAll(".ds").forEach((b,j)=>b.setAttribute("aria-selected",j===i));
+  const d=MANIFEST.datasets[i];
+  if(d._embedded){ renderAll(EMBEDDED); return; }
+  try{
+    const r=await fetch(d.file,{cache:"no-store"});
+    if(!r.ok) throw 0;
+    renderAll(await r.json());
+  }catch(_){
+    $("note").textContent="이 비교 파일을 불러오지 못했습니다: "+d.file;
+    $("note").classList.add("show");
+    renderAll(EMBEDDED);
+  }
+}
 
 function metric(l,v,cls){return `<div class="met"><div class="l">${l}</div><div class="v ${cls||''}">${v}</div></div>`;}
 
@@ -199,7 +251,7 @@ function select(i){
     <div class="dhead"><span class="name">${esc(a.label)}</span><span class="verdict v-${a.relation}">${a.relation}</span></div>
     <div class="dfrom">2015 ${esc(a.areas_prev.join(' + '))} &nbsp;→&nbsp; 2022 ${esc(a.label)}</div>
     <div class="block">
-      <div class="btitle">지식·이해 (중1~3)</div>
+      <div class="btitle">지식·이해</div>
       <div class="chips">${chip('c-keep','유지 ',k.kept.length)}${chip('c-reorg','재구성 ',k.reorganized.length)}${chip('c-map','매핑 ',k.mapped.length)}${chip('c-map','신설 ',k.added.length)}${chip('c-reorg','삭제 ',k.removed.length)}</div>
       ${maps}
       ${k.kept.length?`<div class="keptlist" style="margin-top:11px"><b style="font-weight:500;color:var(--keep)">유지</b> &nbsp;${k.kept.map(esc).join(' · ')}</div>`:''}
@@ -215,13 +267,13 @@ function select(i){
 $("file").addEventListener("change",e=>{
   const f=e.target.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
-      if(!d.areas) throw 0; renderAll(d);
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.areas) throw 0; renderAll(d);
+      $("note").textContent="로컬 파일 미리보기 중: "+f.name; $("note").classList.add("show");
     }catch(_){ alert("diff.json 형식이 아닙니다. diff.py가 만든 파일을 올려 주세요."); } };
   rd.readAsText(f,"utf-8");
 });
 
-renderAll(EMBEDDED);
+init();
 </script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+{
+  "title": "수학과 교육과정 비교",
+  "datasets": [
+    { "id": "math-ms", "label": "수학 · 중학교", "sub": "2015 ↔ 2022", "file": "data/diff.math.ms.2015-2022.json" }
+  ]
+}
