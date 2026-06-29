@@ -1,0 +1,292 @@
+{
+  "schema_version": "1.0",
+  "document": {
+    "id": "math.2015",
+    "subject": "수학",
+    "revision_year": 2015,
+    "notice_no": "교육부 고시 제2020-236호",
+    "document_title": "[별책 8] 수학과 교육과정",
+    "framework_type": "FIVE_ELEMENT",
+    "source_file": "_별책8__2015_개정_수학과_교육과정.pdf",
+    "competencies": [
+      "문제 해결",
+      "추론",
+      "창의·융합",
+      "의사소통",
+      "정보 처리",
+      "태도 및 실천"
+    ],
+    "school_levels": [
+      {
+        "level": "중",
+        "grade_bands": [
+          "중1-3"
+        ],
+        "areas": [
+          {
+            "id": "math.2015.중.수와연산",
+            "name": "수와 연산",
+            "canonical_area": "NUMBER_OPERATION",
+            "order": 1,
+            "framing": [
+              {
+                "role": "CORE_CONCEPT",
+                "text": "수의 체계"
+              },
+              {
+                "role": "CORE_CONCEPT",
+                "text": "수의 연산"
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "수는 방정식의 해의 존재를 보장하기 위해 정수, 유리수, 실수 등으로 확장된다."
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "각각의 수체계에서 사칙계산이 정의되고 연산의 성질이 일관되게 성립한다."
+              }
+            ],
+            "content": [
+              {
+                "grade_band": "중1-3",
+                "source_category": "내용 요소",
+                "role": "KNOWLEDGE",
+                "role_group": "KNOWLEDGE",
+                "items": [
+                  "소인수분해",
+                  "정수와 유리수",
+                  "유리수와 순환소수",
+                  "제곱근과 실수"
+                ]
+              },
+              {
+                "grade_band": "중1-3",
+                "source_category": "기능",
+                "role": "PROCESS",
+                "role_group": "PROCESS",
+                "items": [
+                  "이해하기",
+                  "계산하기",
+                  "판단하기"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "math.2015.중.문자와식",
+            "name": "문자와 식",
+            "canonical_area": "CHANGE_RELATION",
+            "order": 2,
+            "framing": [
+              {
+                "role": "CORE_CONCEPT",
+                "text": "다항식"
+              },
+              {
+                "role": "CORE_CONCEPT",
+                "text": "방정식과 부등식"
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "문자를 통해 수량 관계를 일반화함으로써 산술에서 대수로 이행하며, 수에 대한 사칙연산과 소인수분해는 다항식으로 확장되어 적용된다."
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "방정식과 부등식은 양 사이의 관계를 나타내며, 적절한 절차에 따라 이를 만족시키는 해를 구할 수 있다."
+              }
+            ],
+            "content": [
+              {
+                "grade_band": "중1-3",
+                "source_category": "내용 요소",
+                "role": "KNOWLEDGE",
+                "role_group": "KNOWLEDGE",
+                "items": [
+                  "문자의 사용과 식",
+                  "식의 계산",
+                  "다항식의 곱셈과 인수분해",
+                  "일차방정식",
+                  "일차부등식과 연립일차방정식",
+                  "이차방정식"
+                ]
+              },
+              {
+                "grade_band": "중1-3",
+                "source_category": "기능",
+                "role": "PROCESS",
+                "role_group": "PROCESS",
+                "items": [
+                  "표현하기",
+                  "계산하기",
+                  "이해하기",
+                  "활용하기",
+                  "검토하기",
+                  "문제 해결하기"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "math.2015.중.함수",
+            "name": "함수",
+            "canonical_area": "CHANGE_RELATION",
+            "order": 3,
+            "framing": [
+              {
+                "role": "CORE_CONCEPT",
+                "text": "함수와 그래프"
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "변화하는 양 사이의 관계를 나타내는 함수는 대응과 종속의 의미를 포함하며, 그래프는 함수를 시각적으로 표현하는 도구이다."
+              }
+            ],
+            "content": [
+              {
+                "grade_band": "중1-3",
+                "source_category": "내용 요소",
+                "role": "KNOWLEDGE",
+                "role_group": "KNOWLEDGE",
+                "items": [
+                  "좌표평면과 그래프",
+                  "일차함수와 그래프",
+                  "일차함수와 일차방정식의 관계",
+                  "이차함수와 그래프"
+                ]
+              },
+              {
+                "grade_band": "중1-3",
+                "source_category": "기능",
+                "role": "PROCESS",
+                "role_group": "PROCESS",
+                "items": [
+                  "이해하기",
+                  "해석하기",
+                  "표현하기",
+                  "그래프 그리기",
+                  "활용하기",
+                  "탐구하기",
+                  "문제 해결하기"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "math.2015.중.기하",
+            "name": "기하",
+            "canonical_area": "GEOMETRY_MEASURE",
+            "order": 4,
+            "framing": [
+              {
+                "role": "CORE_CONCEPT",
+                "text": "평면도형"
+              },
+              {
+                "role": "CORE_CONCEPT",
+                "text": "입체도형"
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "주변의 형태는 여러 가지 평면도형으로 범주화 되고, 각각의 평면도형은 고유한 성질을 갖는다."
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "주변의 형태는 여러 가지 입체도형으로 범주화 되고, 각각의 입체도형은 고유한 성질을 갖는다."
+              }
+            ],
+            "content": [
+              {
+                "grade_band": "중1-3",
+                "source_category": "내용 요소",
+                "role": "KNOWLEDGE",
+                "role_group": "KNOWLEDGE",
+                "items": [
+                  "기본 도형",
+                  "작도와 합동",
+                  "평면도형의 성질",
+                  "입체도형의 성질",
+                  "삼각형과 사각형의 성질",
+                  "도형의 닮음",
+                  "피타고라스 정리",
+                  "삼각비",
+                  "원의 성질"
+                ]
+              },
+              {
+                "grade_band": "중1-3",
+                "source_category": "기능",
+                "role": "PROCESS",
+                "role_group": "PROCESS",
+                "items": [
+                  "이해하기",
+                  "설명하기",
+                  "작도하기",
+                  "판별하기",
+                  "계산하기",
+                  "추론하기",
+                  "정당화하기",
+                  "문제 해결하기"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "math.2015.중.확률과통계",
+            "name": "확률과 통계",
+            "canonical_area": "DATA_POSSIBILITY",
+            "order": 5,
+            "framing": [
+              {
+                "role": "CORE_CONCEPT",
+                "text": "확률"
+              },
+              {
+                "role": "CORE_CONCEPT",
+                "text": "통계"
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "사건이 일어날 가능성을 수치화한 확률은 정보화 사회의 불확실성을 이해하는 중요한 도구이다."
+              },
+              {
+                "role": "GENERALIZED_KNOWLEDGE",
+                "text": "자료를 수집, 정리, 해석하는 통계는 합리적인 의사 결정을 위한 기초 자료를 제공한다."
+              }
+            ],
+            "content": [
+              {
+                "grade_band": "중1-3",
+                "source_category": "내용 요소",
+                "role": "KNOWLEDGE",
+                "role_group": "KNOWLEDGE",
+                "items": [
+                  "확률과 그 기본 성질",
+                  "자료의 정리와 해석",
+                  "대푯값과 산포도",
+                  "상관관계"
+                ]
+              },
+              {
+                "grade_band": "중1-3",
+                "source_category": "기능",
+                "role": "PROCESS",
+                "role_group": "PROCESS",
+                "items": [
+                  "표현하기",
+                  "수집하기",
+                  "정리하기",
+                  "그래프 그리기",
+                  "표 만들기",
+                  "해석하기",
+                  "설명하기",
+                  "계산하기",
+                  "판단하기"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

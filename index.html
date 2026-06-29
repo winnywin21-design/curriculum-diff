@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>교육과정 비교 뷰어</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&display=swap">
+<style>
+  :root{
+    --ink:#1d1f1e; --muted:#6c706e; --faint:#9a9e9c;
+    --paper:#f1f2f0; --surface:#ffffff; --line:#e4e6e3; --line2:#d4d7d3;
+    --keep:#2f7d52; --keep-bg:#e7f1ea;
+    --merge:#3a3f9e; --merge-bg:#ecedf8;
+    --rename:#6c706e; --rename-bg:#edefec;
+    --reorg:#9a6212; --reorg-bg:#f6efdd;
+    --new:#6d3a9e; --new-bg:#f1eaf7;
+    --review:#b4402a; --review-bg:#f7e8e3;
+    --ui:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --serif:"Noto Serif KR",serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:28px 22px 64px}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+    flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--line2);margin-bottom:24px}
+  h1{font-family:var(--serif);font-weight:600;font-size:25px;letter-spacing:-.01em;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--muted)}
+  .sub b{font-weight:500;color:var(--ink)}
+  .load{font-family:var(--ui);font-size:13px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line2);border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+  .load:hover{border-color:var(--muted)}
+
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 30px}
+  @media(max-width:560px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  .met{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+  .met .l{font-size:12px;color:var(--muted);margin-bottom:5px}
+  .met .v{font-family:var(--serif);font-weight:600;font-size:24px;line-height:1}
+  .met .v.ok{color:var(--keep)} .met .v.warn{color:var(--review)}
+
+  .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;
+    margin:0 0 12px;font-weight:500}
+
+  .spine{display:flex;flex-direction:column;gap:9px;margin-bottom:34px}
+  .row{display:grid;grid-template-columns:1fr auto 1.05fr;align-items:center;gap:14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:13px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .row:hover{border-color:var(--line2)}
+  .row.sel{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+  .prev{display:flex;flex-direction:column;gap:3px}
+  .prev .a{font-size:14px;color:var(--muted)}
+  .mid{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:74px}
+  .conn{color:var(--faint);font-size:13px;line-height:1}
+  .verdict{font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .v-유지{background:var(--keep-bg);color:var(--keep)}
+  .v-통합{background:var(--merge-bg);color:var(--merge)}
+  .v-명칭변경{background:var(--rename-bg);color:var(--rename)}
+  .v-분리{background:var(--reorg-bg);color:var(--reorg)}
+  .cur{display:flex;align-items:center;gap:9px;justify-content:flex-end;text-align:right}
+  .cur .name{font-family:var(--serif);font-weight:500;font-size:17px}
+  .flag{width:8px;height:8px;border-radius:50%;background:var(--review);flex:none}
+  @media(max-width:560px){
+    .row{grid-template-columns:1fr;gap:8px}
+    .mid{flex-direction:row;align-items:center}
+    .cur{justify-content:flex-start;text-align:left}
+  }
+
+  .detail{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+  .dhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:4px}
+  .dhead .name{font-family:var(--serif);font-weight:600;font-size:20px}
+  .dfrom{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .block{margin-bottom:22px}
+  .btitle{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:500;margin-bottom:11px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px}
+  .chip{font-size:13px;font-weight:500;padding:4px 11px;border-radius:8px}
+  .chip small{font-weight:400;opacity:.75;margin-right:5px}
+  .c-keep{background:var(--keep-bg);color:var(--keep)}
+  .c-reorg{background:var(--reorg-bg);color:var(--reorg)}
+  .c-map{background:var(--merge-bg);color:var(--merge)}
+  .c-zero{background:var(--rename-bg);color:var(--faint)}
+  .keptlist{font-size:13px;color:var(--muted);line-height:1.85}
+  .maprow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+  .maprow:first-of-type{border-top:none}
+  .mtag{font-size:11px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--merge-bg);color:var(--merge);flex:none}
+  .mtag.re{background:var(--reorg-bg);color:var(--reorg)}
+  .mfrom{color:var(--muted)} .mto{color:var(--ink);font-weight:500} .marrow{color:var(--faint)}
+  .mnote{flex-basis:100%;font-size:12px;color:var(--faint);padding-left:2px}
+  .vals{background:var(--new-bg);border-radius:11px;padding:14px 16px}
+  .vals .vh{font-size:12px;font-weight:500;color:var(--new);margin-bottom:8px}
+  .vals ul{margin:0;padding-left:18px}
+  .vals li{font-size:13.5px;line-height:1.7;margin-bottom:3px}
+  .banner{display:flex;gap:10px;align-items:flex-start;border-radius:11px;padding:13px 15px;margin-top:20px;font-size:13.5px;line-height:1.6}
+  .banner.ok{background:var(--keep-bg);color:var(--keep)}
+  .banner.rv{background:var(--review-bg);color:var(--review)}
+  .banner b{font-weight:600}
+
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--faint);line-height:1.7}
+  code{font-family:ui-monospace,monospace;background:var(--surface);border:1px solid var(--line);
+    border-radius:5px;padding:1px 6px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>수학과 교육과정 비교 뷰어</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <label class="load">다른 diff.json 보기
+      <input type="file" id="file" accept="application/json,.json" hidden>
+    </label>
+  </header>
+
+  <div class="metrics" id="metrics"></div>
+
+  <p class="eyebrow" id="spinetitle"></p>
+  <div class="spine" id="spine"></div>
+
+  <div class="detail" id="detail"></div>
+
+  <footer>
+    이 페이지는 파이프라인이 만든 <code>diff.json</code>을 읽어 보여줍니다. 기술 담당이
+    <code>diff.py</code>로 새 결과를 뽑으면, 오른쪽 위 “다른 diff.json 보기”로 올려 같이 보면 됩니다.
+    설치할 것은 없고, 인터넷이 없으면 글꼴만 기본체로 바뀝니다.
+  </footer>
+</div>
+
+<script>
+const EMBEDDED = {
+  "pair":"math.2015 ↔ math.2022","crosswalk_applied":true,
+  "areas":[
+    {"canonical_area":"NUMBER_OPERATION","label":"수와 연산","areas_prev":["수와 연산"],"relation":"유지",
+     "knowledge":{"kept":["소인수분해","정수와 유리수","유리수와 순환소수","제곱근과 실수"],"reorganized":[],"mapped":[],"added":[],"removed":[]},
+     "value_new":["음수, 무리수의 필요성 인식","수 체계의 논리적 아름다움에 대한 관심","정수와 유리수의 사칙계산의 원리를 이용하는 문제의 풀이 과정과 결과를 반성하는 태도"],"review_needed":false},
+    {"canonical_area":"CHANGE_RELATION","label":"변화와 관계","areas_prev":["문자와 식","함수"],"relation":"통합",
+     "knowledge":{"kept":["문자의 사용과 식","일차방정식","좌표평면과 그래프","식의 계산","일차함수와 그 그래프","일차함수와 일차방정식의 관계","다항식의 곱셈과 인수분해","이차방정식","이차함수와 그 그래프"],
+       "reorganized":[{"from":["일차부등식과 연립일차방정식"],"to":["일차부등식","연립일차방정식"]}],"mapped":[],"added":[],"removed":[]},
+     "value_new":["문자의 유용성 인식","방정식, 부등식, 함수의 필요성 인식","실생활, 사회 및 자연 현상과 관련된 문제를 수학적 모델링을 통해 해결하려는 도전적인 태도","타당한 근거에 따라 논리적으로 설명하는 태도"],"review_needed":false},
+    {"canonical_area":"GEOMETRY_MEASURE","label":"도형과 측정","areas_prev":["기하"],"relation":"명칭변경",
+     "knowledge":{"kept":["기본 도형","작도와 합동","평면도형의 성질","입체도형의 성질","삼각형과 사각형의 성질","도형의 닮음","피타고라스 정리","삼각비","원의 성질"],"reorganized":[],"mapped":[],"added":[],"removed":[]},
+     "value_new":["다양한 정당화 방법을 이용하여 체계적으로 사고하고 타인을 합리적으로 설득하려는 태도","정당화를 통해 수학적 근거를 바탕으로 비판적으로 사고하는 태도"],"review_needed":false},
+    {"canonical_area":"DATA_POSSIBILITY","label":"자료와 가능성","areas_prev":["확률과 통계"],"relation":"명칭변경",
+     "knowledge":{"kept":[],"reorganized":[{"from":["대푯값과 산포도"],"to":["대푯값","산포도"]}],
+       "mapped":[{"from":["확률과 그 기본 성질"],"to":["경우의 수와 확률"],"relation":"명칭변경·확장","note":"경우의 수를 명시적으로 포함"},
+         {"from":["자료의 정리와 해석"],"to":["도수분포표와 상대도수"],"relation":"구체화","note":"포괄 항목이 구체 항목으로"},
+         {"from":["상관관계"],"to":["상자그림과 산점도"],"relation":"명칭변경","note":"산점도로 이어짐 / 상자그림은 신설(학교급 하향 추정, 확인 요)"}],"added":[],"removed":[]},
+     "value_new":["체계적으로 사고하여 합리적으로 의사 결정하는 태도","확률 및 통계적 근거를 바탕으로 비판적으로 사고하는 태도"],"review_needed":false}
+  ]
+};
+
+let DATA, sel=0;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function metric(l,v,cls){return `<div class="met"><div class="l">${l}</div><div class="v ${cls||''}">${v}</div></div>`;}
+
+function renderAll(data){
+  DATA=data; sel=0;
+  const A=data.areas;
+  const prevN=A.reduce((s,a)=>s+a.areas_prev.length,0), curN=A.length;
+  const clean=A.filter(a=>!a.review_needed).length;
+  const valN=A.reduce((s,a)=>s+a.value_new.length,0);
+  const review=A.length-clean;
+  $("sub").innerHTML=`<b>${esc(data.pair)}</b> · 내용 체계 · 크로스워크 ${data.crosswalk_applied?'적용':'미적용'}`;
+  $("metrics").innerHTML=
+    metric("영역 재편",`${prevN} → ${curN}`)+
+    metric("내용 정합",`${clean} / ${A.length}`,clean===A.length?'ok':'')+
+    metric("가치·태도 신설",valN)+
+    metric("검토 필요",review,review?'warn':'ok');
+  $("spinetitle").textContent=`영역 재편  ${prevN} → ${curN}`;
+  $("spine").innerHTML=A.map((a,i)=>`
+    <div class="row ${i===sel?'sel':''}" data-i="${i}">
+      <div class="prev">${a.areas_prev.map(p=>`<span class="a">${esc(p)}</span>`).join('')}</div>
+      <div class="mid"><span class="conn">2015 →</span><span class="verdict v-${a.relation}">${a.relation}</span></div>
+      <div class="cur"><span class="name">${esc(a.label)}</span>${a.review_needed?'<span class="flag" title="검토 필요"></span>':''}</div>
+    </div>`).join('');
+  $("spine").querySelectorAll(".row").forEach(r=>r.onclick=()=>select(+r.dataset.i));
+  select(0);
+}
+
+function chip(cls,label,n){return `<span class="chip ${n===0?'c-zero':cls}"><small>${label}</small>${n}</span>`;}
+
+function select(i){
+  sel=i; const a=DATA.areas[i], k=a.knowledge;
+  document.querySelectorAll(".row").forEach((r,j)=>r.classList.toggle("sel",j===i));
+  let maps='';
+  k.reorganized.forEach(r=>maps+=`<div class="maprow"><span class="mtag re">재구성</span><span class="mfrom">${esc(r.from.join(', '))}</span><span class="marrow">→</span><span class="mto">${esc(r.to.join(' + '))}</span></div>`);
+  k.mapped.forEach(m=>maps+=`<div class="maprow"><span class="mtag">${esc(m.relation)}</span><span class="mfrom">${esc(m.from.join(', '))}</span><span class="marrow">→</span><span class="mto">${esc(m.to.join(' + '))}</span>${m.note?`<span class="mnote">${esc(m.note)}</span>`:''}</div>`);
+  k.added.forEach(x=>maps+=`<div class="maprow"><span class="mtag" style="background:var(--new-bg);color:var(--new)">신설</span><span class="mto">${esc(x)}</span></div>`);
+  k.removed.forEach(x=>maps+=`<div class="maprow"><span class="mtag" style="background:var(--review-bg);color:var(--review)">삭제</span><span class="mfrom">${esc(x)}</span></div>`);
+  const banner=a.review_needed
+    ? `<div class="banner rv"><b>검토 필요</b>&nbsp; 자동 매칭되지 않은 항목이 있습니다. 내용을 확인해 항목 크로스워크에 매핑을 추가하세요.</div>`
+    : `<div class="banner ok"><b>정합</b>&nbsp; 2015 항목이 모두 2022로 대응됩니다. 손댈 곳은 가치·태도 신설과 영역 머리 서술입니다.</div>`;
+  $("detail").innerHTML=`
+    <div class="dhead"><span class="name">${esc(a.label)}</span><span class="verdict v-${a.relation}">${a.relation}</span></div>
+    <div class="dfrom">2015 ${esc(a.areas_prev.join(' + '))} &nbsp;→&nbsp; 2022 ${esc(a.label)}</div>
+    <div class="block">
+      <div class="btitle">지식·이해 (중1~3)</div>
+      <div class="chips">${chip('c-keep','유지 ',k.kept.length)}${chip('c-reorg','재구성 ',k.reorganized.length)}${chip('c-map','매핑 ',k.mapped.length)}${chip('c-map','신설 ',k.added.length)}${chip('c-reorg','삭제 ',k.removed.length)}</div>
+      ${maps}
+      ${k.kept.length?`<div class="keptlist" style="margin-top:11px"><b style="font-weight:500;color:var(--keep)">유지</b> &nbsp;${k.kept.map(esc).join(' · ')}</div>`:''}
+    </div>
+    <div class="block">
+      <div class="btitle">가치·태도 · 전면 신설</div>
+      <div class="vals"><div class="vh">2015 대응 없음 — ${a.value_new.length}개 신설</div>
+        <ul>${a.value_new.map(v=>`<li>${esc(v)}</li>`).join('')}</ul></div>
+    </div>
+    ${banner}`;
+}
+
+$("file").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
+      if(!d.areas) throw 0; renderAll(d);
+    }catch(_){ alert("diff.json 형식이 아닙니다. diff.py가 만든 파일을 올려 주세요."); } };
+  rd.readAsText(f,"utf-8");
+});
+
+renderAll(EMBEDDED);
+</script>
+</body>
+</html>
