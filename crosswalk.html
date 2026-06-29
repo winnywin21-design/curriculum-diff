@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>크로스워크 편집기</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&display=swap">
+<style>
+  :root{
+    --ink:#1d1f1e;--muted:#6c706e;--faint:#9a9e9c;
+    --paper:#f1f2f0;--surface:#ffffff;--line:#e4e6e3;--line2:#d4d7d3;
+    --accent:#3a3f9e;--accent-bg:#ecedf8;
+    --ok:#2f7d52;--ok-bg:#e7f1ea;--warn:#b4402a;--warn-bg:#f7e8e3;
+    --ui:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --serif:"Noto Serif KR",serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 120px}
+  a{color:var(--accent)}
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;
+    padding-bottom:16px;border-bottom:1px solid var(--line2);margin-bottom:20px}
+  h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 0 3px}
+  .sub{font-size:13px;color:var(--muted)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+  .panel h2{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 12px;letter-spacing:.02em}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+  .field label{font-size:12px;color:var(--muted)}
+  input,select{font-family:var(--ui);font-size:14px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line2);border-radius:8px;padding:8px 11px;width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .btn{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid transparent}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line2)}
+  .btn.sm{font-size:12.5px;padding:5px 11px}
+  .btn:disabled{opacity:.5;cursor:default}
+  .status{font-size:13px;margin-top:8px;min-height:18px}
+  .status.ok{color:var(--ok)} .status.err{color:var(--warn)} .status.muted{color:var(--muted)}
+
+  .area{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+  .area h3{font-family:var(--serif);font-weight:600;font-size:17px;margin:0 0 4px}
+  .area .canon{font-size:11.5px;color:var(--faint);margin-bottom:13px;font-family:ui-monospace,monospace}
+  .map{border:1px solid var(--line);border-radius:10px;padding:12px 13px;margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .mini{font-size:11px;color:var(--muted);margin-bottom:3px;display:block}
+  .maprow2{display:grid;grid-template-columns:160px 1fr auto;gap:9px;align-items:end}
+  @media(max-width:560px){.maprow2{grid-template-columns:1fr}}
+  .del{color:var(--warn);background:transparent;border:1px solid var(--warn-bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12.5px;white-space:nowrap}
+  .addrow{margin-top:4px}
+
+  .savebar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(6px);border-top:1px solid var(--line2);padding:12px 22px}
+  .savebar .inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .savebar .st{font-size:13px;color:var(--muted);flex:1}
+  .hide{display:none}
+  .hint{font-size:12px;color:var(--faint);line-height:1.7;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>크로스워크 편집기</h1>
+      <div class="sub">편집자 판단(항목 매핑)을 고치면 저장소에 기록됩니다 · <a href="./">비교 뷰어로</a></div>
+    </div>
+  </header>
+
+  <div class="panel" id="setup">
+    <h2>연결 설정 (처음 한 번)</h2>
+    <div class="field">
+      <label>Worker 주소</label>
+      <input id="worker" placeholder="https://이름.아이디.workers.dev">
+    </div>
+    <div class="grid">
+      <div class="field"><label>편집 암호</label><input id="key" type="password" placeholder="팀 공유 암호"></div>
+      <div class="field"><label>내 이름 (커밋에 기록)</label><input id="who" placeholder="예: 김편집"></div>
+    </div>
+    <button class="btn primary" id="connect">연결하고 불러오기</button>
+    <div class="status muted" id="setupStatus"></div>
+    <div class="hint">주소·암호·이름은 이 브라우저에만 저장돼 다음부터 자동으로 채워집니다.</div>
+  </div>
+
+  <div id="editor" class="hide"></div>
+</div>
+
+<div class="savebar hide" id="savebar">
+  <div class="inner">
+    <span class="st" id="saveStatus">저장하면 저장소에 커밋되고, 모두에게 반영됩니다.</span>
+    <button class="btn ghost sm" id="reload">다시 불러오기</button>
+    <button class="btn primary" id="save">저장</button>
+  </div>
+</div>
+
+<script>
+const AREAS = [
+  ["NUMBER_OPERATION","수와 연산"],
+  ["CHANGE_RELATION","변화와 관계"],
+  ["GEOMETRY_MEASURE","도형과 측정"],
+  ["DATA_POSSIBILITY","자료와 가능성"],
+];
+const RELATIONS = ["명칭변경","명칭변경·확장","구체화","분할","통합","신설","삭제"];
+const $ = id => document.getElementById(id);
+let MODEL=null, SHA=null;
+
+// 설정 복원
+$("worker").value = localStorage.getItem("cw_worker")||"";
+$("key").value    = localStorage.getItem("cw_key")||"";
+$("who").value    = localStorage.getItem("cw_who")||"";
+
+function saveSettings(){
+  localStorage.setItem("cw_worker",$("worker").value.trim().replace(/\/$/,""));
+  localStorage.setItem("cw_key",$("key").value);
+  localStorage.setItem("cw_who",$("who").value.trim());
+}
+function workerUrl(){ return ($("worker").value.trim().replace(/\/$/,"")); }
+
+async function load(){
+  saveSettings();
+  const url=workerUrl();
+  if(!url){ setStatus("setupStatus","Worker 주소를 입력하세요.","err"); return; }
+  setStatus("setupStatus","불러오는 중…","muted");
+  try{
+    const r=await fetch(url,{method:"GET"});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||r.status);
+    MODEL=j.data||{level:"중"}; SHA=j.sha||null;
+    renderEditor();
+    setStatus("setupStatus","불러왔습니다.","ok");
+    $("editor").classList.remove("hide");
+    $("savebar").classList.remove("hide");
+  }catch(e){
+    setStatus("setupStatus","불러오기 실패: "+e.message+" (주소가 맞는지 확인하세요)","err");
+  }
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function relOptions(v){ return RELATIONS.map(r=>`<option value="${esc(r)}"${r===v?" selected":""}>${esc(r)}</option>`).join(""); }
+
+function mapCard(area, m){
+  m=m||{from:[],to:[],relation:"명칭변경",note:""};
+  return `<div class="map" data-area="${area}">
+    <div class="grid">
+      <div><span class="mini">2015 항목 (여러 개면 쉼표)</span><input class="f-from" value="${esc((m.from||[]).join(', '))}" placeholder="예: 상관관계"></div>
+      <div><span class="mini">2022 항목 (여러 개면 쉼표)</span><input class="f-to" value="${esc((m.to||[]).join(', '))}" placeholder="예: 상자그림과 산점도"></div>
+    </div>
+    <div class="maprow2">
+      <div><span class="mini">관계</span><select class="f-rel">${relOptions(m.relation||"명칭변경")}</select></div>
+      <div><span class="mini">메모</span><input class="f-note" value="${esc(m.note||'')}" placeholder="판단 근거(선택)"></div>
+      <button class="del" onclick="this.closest('.map').remove()">삭제</button>
+    </div>
+  </div>`;
+}
+
+function renderEditor(){
+  let html="";
+  for(const [canon,label] of AREAS){
+    const maps=Array.isArray(MODEL[canon])?MODEL[canon]:[];
+    html+=`<div class="area" data-canon="${canon}">
+      <h3>${label}</h3><div class="canon">${canon}</div>
+      <div class="maps">${maps.map(m=>mapCard(canon,m)).join("")}</div>
+      <button class="btn ghost sm addrow" onclick="addMap('${canon}')">+ 매핑 추가</button>
+    </div>`;
+  }
+  $("editor").innerHTML=html;
+}
+function addMap(canon){
+  const area=document.querySelector(`.area[data-canon="${canon}"] .maps`);
+  area.insertAdjacentHTML("beforeend", mapCard(canon, null));
+}
+
+function collect(){
+  // 기존 비-영역 키(level, _note 등)는 보존
+  const out={};
+  for(const k in MODEL){ if(!AREAS.some(a=>a[0]===k)) out[k]=MODEL[k]; }
+  const splitC=s=>s.split(",").map(x=>x.trim()).filter(Boolean);
+  for(const [canon] of AREAS){
+    const rows=[...document.querySelectorAll(`.map[data-area="${canon}"]`)];
+    const arr=[];
+    for(const r of rows){
+      const from=splitC(r.querySelector(".f-from").value);
+      const to=splitC(r.querySelector(".f-to").value);
+      if(!from.length && !to.length) continue; // 빈 행 무시
+      const obj={from,to,relation:r.querySelector(".f-rel").value};
+      const note=r.querySelector(".f-note").value.trim();
+      if(note) obj.note=note;
+      arr.push(obj);
+    }
+    if(arr.length) out[canon]=arr;
+  }
+  return out;
+}
+
+async function save(){
+  saveSettings();
+  const url=workerUrl(); const key=$("key").value;
+  if(!key){ setSave("편집 암호를 입력하세요.","err"); return; }
+  const data=collect();
+  setSave("저장 중…","muted"); $("save").disabled=true;
+  try{
+    const r=await fetch(url,{method:"POST",
+      headers:{"Content-Type":"application/json","X-Edit-Key":key},
+      body:JSON.stringify({data, sha:SHA, who:$("who").value.trim()})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||r.status);
+    MODEL=data; // 최신 상태 반영
+    setSave("저장됨 · 커밋 "+(j.commit?j.commit.slice(0,7):"")+" · 다시 불러오면 최신 sha로 갱신됩니다","ok");
+  }catch(e){
+    setSave("저장 실패: "+e.message,"err");
+  }finally{ $("save").disabled=false; }
+}
+
+function setStatus(id,msg,cls){ const el=$(id); el.textContent=msg; el.className="status "+(cls||""); }
+function setSave(msg,cls){ const el=$("saveStatus"); el.textContent=msg; el.style.color=cls==="ok"?"var(--ok)":cls==="err"?"var(--warn)":"var(--muted)"; }
+
+$("connect").onclick=load;
+$("reload").onclick=load;
+$("save").onclick=save;
+
+// 설정이 이미 채워져 있으면 자동 로드 시도
+if(localStorage.getItem("cw_worker")) load();
+</script>
+</body>
+</html>
