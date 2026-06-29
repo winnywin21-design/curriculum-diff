@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>PDF 추출 테스트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --ink:#1d1f1e;--muted:#6c706e;--faint:#9a9e9c;
+    --paper:#f1f2f0;--surface:#ffffff;--line:#e4e6e3;--line2:#d4d7d3;
+    --accent:#3a3f9e;--accent-bg:#ecedf8;
+    --ok:#2f7d52;--ok-bg:#e7f1ea;--warn:#b4402a;--warn-bg:#f7e8e3;
+    --ui:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --serif:"Noto Serif KR",serif;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.6}
+  .wrap{max-width:860px;margin:0 auto;padding:26px 22px 80px}
+  a{color:var(--accent)}
+  h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 0 3px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .panel h2{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 12px;letter-spacing:.02em}
+  label{font-size:12px;color:var(--muted)}
+  input[type=text]{font-family:var(--ui);font-size:14px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line2);border-radius:8px;padding:8px 11px;width:100%}
+  input:focus{outline:none;border-color:var(--accent)}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+  .drop{border:1.5px dashed var(--line2);border-radius:10px;padding:22px;text-align:center;color:var(--muted);cursor:pointer;background:var(--paper)}
+  .drop:hover{border-color:var(--accent);color:var(--ink)}
+  .btn{font-family:var(--ui);font-size:14px;font-weight:500;border-radius:8px;padding:10px 18px;cursor:pointer;border:1px solid transparent;background:var(--ink);color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  .status{font-size:13px;margin-top:10px;min-height:18px;color:var(--muted)}
+  .status.ok{color:var(--ok)} .status.err{color:var(--warn)}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 0}
+  .pill{font-size:12px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted)}
+  .check{border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13.5px;line-height:1.6}
+  .check.ok{background:var(--ok-bg);color:var(--ok)} .check.err{background:var(--warn-bg);color:var(--warn)}
+  .check b{font-weight:600}
+  pre{background:#1f2124;color:#e6e6e6;border-radius:10px;padding:14px 16px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.6;max-height:460px}
+  .hint{font-size:12px;color:var(--faint);line-height:1.7;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PDF 추출 테스트</h1>
+  <div class="sub">PDF에서 텍스트를 뽑아 OpenAI로 보내고, 우리 스키마 JSON이 나오는지 확인합니다 · <a href="./">비교 뷰어로</a></div>
+
+  <div class="panel">
+    <h2>1 · 추출 Worker 주소</h2>
+    <div class="field"><input id="worker" type="text" placeholder="https://extract-api.아이디.workers.dev"></div>
+    <div class="hint">주소는 이 브라우저에 저장돼 다음부터 자동으로 채워집니다.</div>
+  </div>
+
+  <div class="panel">
+    <h2>2 · 교육과정 PDF</h2>
+    <div class="drop" id="drop">여기를 클릭하거나 PDF를 끌어다 놓으세요</div>
+    <input type="file" id="file" accept="application/pdf" hidden>
+    <div class="meta" id="fileMeta"></div>
+  </div>
+
+  <button class="btn" id="run" disabled>추출 실행</button>
+  <div class="status" id="status"></div>
+
+  <div id="result" style="margin-top:18px"></div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const $=id=>document.getElementById(id);
+const MAXCHARS=45000; // 토큰·비용 제한: '내용 체계' 부근만 잘라 보냄
+let pdfText="";
+
+$("worker").value=localStorage.getItem("ex_worker")||"";
+$("worker").oninput=()=>localStorage.setItem("ex_worker",$("worker").value.trim().replace(/\/$/,""));
+
+$("drop").onclick=()=>$("file").click();
+$("drop").ondragover=e=>{e.preventDefault();$("drop").style.borderColor="var(--accent)";};
+$("drop").ondragleave=()=>$("drop").style.borderColor="";
+$("drop").ondrop=e=>{e.preventDefault();$("drop").style.borderColor="";if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);};
+$("file").onchange=e=>{if(e.target.files[0])handleFile(e.target.files[0]);};
+
+async function handleFile(f){
+  if(f.type!=="application/pdf"){ setStatus("PDF 파일만 됩니다.","err"); return; }
+  setStatus("PDF에서 텍스트 추출 중…","");
+  $("run").disabled=true;
+  try{
+    const buf=await f.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let text="";
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const c=await page.getTextContent();
+      text+=c.items.map(i=>i.str).join(" ")+"\n";
+    }
+    pdfText=text;
+    const sliced=slice(text);
+    $("fileMeta").innerHTML=
+      `<span class="pill">${f.name}</span>`+
+      `<span class="pill">${pdf.numPages}쪽</span>`+
+      `<span class="pill">전체 ${text.length.toLocaleString()}자</span>`+
+      `<span class="pill">보낼 ${sliced.length.toLocaleString()}자</span>`;
+    setStatus("준비됨. ‘추출 실행’을 누르세요.","ok");
+    $("run").disabled=false;
+  }catch(e){ setStatus("PDF 읽기 실패: "+e.message,"err"); }
+}
+
+// '내용 체계' 부근을 우선으로 잘라 보냄(없으면 앞부분)
+function slice(t){
+  let i=t.indexOf("내용 체계");
+  if(i<0) i=t.indexOf("내용체계");
+  const start=i<0?0:Math.max(0,i-200);
+  return t.slice(start,start+MAXCHARS);
+}
+
+$("run").onclick=async ()=>{
+  const url=$("worker").value.trim().replace(/\/$/,"");
+  if(!url){ setStatus("Worker 주소를 입력하세요.","err"); return; }
+  if(!pdfText){ setStatus("먼저 PDF를 올리세요.","err"); return; }
+  setStatus("OpenAI로 추출 중… (수십 초 걸릴 수 있어요)","");
+  $("run").disabled=true; $("result").innerHTML="";
+  try{
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text:slice(pdfText)})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error+(j.detail?" — "+JSON.stringify(j.detail).slice(0,300):""));
+    render(j);
+    setStatus("완료.","ok");
+  }catch(e){ setStatus("추출 실패: "+e.message,"err"); }
+  finally{ $("run").disabled=false; }
+};
+
+function validate(data){
+  const e=[]; const d=data.document||{}; const ft=d.framework_type;
+  const lv=data.school_levels||[];
+  let nArea=0,nKnow=0,nVal=0;
+  const ROLE=new Set(["BIG_IDEA","CORE_CONCEPT","GENERALIZED_KNOWLEDGE","KNOWLEDGE","PROCESS","VALUE"]);
+  for(const L of lv){ for(const a of (L.areas||[])){ nArea++;
+    const roles=[...(a.framing||[]).map(x=>x.role),...(a.content||[]).map(x=>x.role)];
+    if(ft==="FIVE_ELEMENT"&&roles.some(r=>r==="VALUE"||r==="BIG_IDEA")) e.push(a.name+": FIVE_ELEMENT인데 VALUE/BIG_IDEA");
+    if(ft==="BIG_IDEA_THREE_CATEGORY"&&roles.some(r=>r==="CORE_CONCEPT"||r==="GENERALIZED_KNOWLEDGE")) e.push(a.name+": 3범주인데 CORE_CONCEPT/일반화된지식");
+    for(const b of (a.content||[])){ if(!ROLE.has(b.role)) e.push(a.name+": 알 수 없는 role "+b.role);
+      if(b.role==="KNOWLEDGE") nKnow+=(b.items||[]).length;
+      if(b.role==="VALUE") nVal+=(b.items||[]).length; }
+  }}
+  return {e,nArea,nKnow,nVal,ft,levels:lv.length};
+}
+
+function render(j){
+  const v=validate(j.data);
+  const tok=j.usage?`입력 ${j.usage.prompt_tokens} · 출력 ${j.usage.completion_tokens} 토큰`:"";
+  const checkCls=v.e.length?"err":"ok";
+  const checkMsg=v.e.length
+    ? `<b>검증: 위반 ${v.e.length}건</b><br>`+v.e.map(x=>"· "+x).join("<br>")
+    : `<b>검증 통과</b> — 규칙 위반 없음`;
+  $("result").innerHTML=
+    `<div class="check ${checkCls}">${checkMsg}</div>`+
+    `<div class="meta" style="margin-bottom:12px">
+       <span class="pill">${j.model}</span>
+       <span class="pill">체계 ${v.ft||"?"}</span>
+       <span class="pill">학교급 ${v.levels}</span>
+       <span class="pill">영역 ${v.nArea}</span>
+       <span class="pill">지식·이해 ${v.nKnow}</span>
+       <span class="pill">가치·태도 ${v.nVal}</span>
+       ${tok?`<span class="pill">${tok}</span>`:""}
+     </div>`+
+    `<pre>${esc(JSON.stringify(j.data,null,2))}</pre>`;
+}
+
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function setStatus(m,c){const el=$("status");el.textContent=m;el.className="status "+(c||"");}
+</script>
+</body>
+</html>
